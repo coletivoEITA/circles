@@ -39,11 +39,8 @@ use OCP\IDBConnection;
 use OCP\Share;
 use OCP\Share\IShare;
 
-class CircleProviderRequestBuilder {
+class CircleProviderRequestBuilder extends CoreRequestBuilder {
 
-
-	/** @var IDBConnection */
-	protected $dbConnection;
 
 
 	/**
@@ -159,8 +156,6 @@ class CircleProviderRequestBuilder {
 	 *
 	 * @param IQueryBuilder $qb
 	 * @param $files
-	 *
-	 * @internal param $fileId
 	 */
 	protected function limitToFiles(IQueryBuilder &$qb, $files) {
 

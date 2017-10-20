@@ -27,6 +27,7 @@
 /** global: OC */
 
 var elements = {
+	test_timer: 4000,
 	test_async_start: null,
 	test_async_reset: null,
 	test_async_wait: null,
@@ -51,7 +52,7 @@ $(document).ready(function () {
 	elements.test_async_reset.hide().on('click', function () {
 		$.ajax({
 			method: 'DELETE',
-			url: OC.generateUrl('/apps/circles/admin/testAsync')
+			url: OC.generateUrl(oc_appswebroots.circles + '/admin/testAsync')
 		}).done(function (res) {
 			self.displayTestAsync(res);
 		});
@@ -60,7 +61,7 @@ $(document).ready(function () {
 	elements.test_async_start.hide().on('click', function () {
 		$.ajax({
 			method: 'POST',
-			url: OC.generateUrl('/apps/circles/admin/testAsync')
+			url: OC.generateUrl(oc_appswebroots.circles + '/admin/testAsync')
 		}).done(function (res) {
 			self.displayTestAsync(res);
 		});
@@ -77,7 +78,7 @@ $(document).ready(function () {
 	saveChange = function () {
 		$.ajax({
 			method: 'POST',
-			url: OC.generateUrl('/apps/circles/admin/settings'),
+			url: OC.generateUrl(oc_appswebroots.circles + '/admin/settings'),
 			data: {
 				allow_linked_groups: (elements.allow_linked_groups.is(
 					':checked')) ? '1' : '0',
@@ -98,7 +99,7 @@ $(document).ready(function () {
 	refreshResult = function () {
 		$.ajax({
 			method: 'GET',
-			url: OC.generateUrl('/apps/circles/admin/testAsync')
+			url: OC.generateUrl(oc_appswebroots.circles + '/admin/testAsync')
 		}).done(function (res) {
 			self.displayTestAsync(res);
 		});
@@ -164,7 +165,7 @@ $(document).ready(function () {
 
 	$.ajax({
 		method: 'GET',
-		url: OC.generateUrl('/apps/circles/admin/settings'),
+		url: OC.generateUrl(oc_appswebroots.circles + '/admin/settings'),
 		data: {}
 	}).done(function (res) {
 		elements.allow_linked_groups.prop('checked', (res.allowLinkedGroups === '1'));
@@ -173,7 +174,7 @@ $(document).ready(function () {
 
 	var timerTestAsync = setInterval(function () {
 		self.updateTestAsync();
-	}, 4000);
+	}, elements.test_timer);
 
 
 })
