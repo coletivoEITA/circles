@@ -39,11 +39,8 @@ use OCP\IDBConnection;
 use OCP\Share;
 use OCP\Share\IShare;
 
-class CircleProviderRequestBuilder {
+class CircleProviderRequestBuilder extends CoreRequestBuilder {
 
-
-	/** @var IDBConnection */
-	protected $dbConnection;
 
 
 	/**
