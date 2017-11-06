@@ -39,6 +39,7 @@ use OCA\Circles\Service\MiscService;
 use OCP\Activity\IEvent;
 use OCP\Activity\IManager;
 use OCP\Activity\IProvider;
+use OpenCloud\Common\Exceptions\InvalidArgumentError;
 
 class Provider implements IProvider {
 
@@ -78,17 +79,14 @@ class Provider implements IProvider {
 
 
 	/**
-	 * @param string $lang
-	 * @param IEvent $event
-	 * @param IEvent|null $previousEvent
-	 *
-	 * @return IEvent
+	 * {@inheritdoc}
 	 */
 	public function parse($lang, IEvent $event, IEvent $previousEvent = null) {
 
 		try {
 			$params = $event->getSubjectParameters();
 			$this->initActivityParser($event, $params);
+
 			$circle = Circle::fromJSON($params['circle']);
 
 			$this->setIcon($event, $circle);
@@ -96,12 +94,10 @@ class Provider implements IProvider {
 			$this->parseAsModerator($event, $circle, $params);
 
 		} catch (FakeException $e) {
-			$this->generateParsedSubject($event);
-
-			return $event;
+			/** clean exit */
 		}
 
-		throw new InvalidArgumentException();
+		return $event;
 	}
 
 
@@ -117,23 +113,6 @@ class Provider implements IProvider {
 		if (!key_exists('circle', $params)) {
 			throw new InvalidArgumentException();
 		}
-	}
-
-
-	/**
-	 * @param IEvent $event
-	 */
-	private function generateParsedSubject(IEvent &$event) {
-		$subject = $event->getRichSubject();
-		$params = $event->getRichSubjectParameters();
-		$ak = array_keys($params);
-		foreach ($ak as $k) {
-			if (is_array($params[$k])) {
-				$subject = str_replace('{' . $k . '}', $params[$k]['parsed'], $subject);
-			}
-		}
-
-		$event->setParsedSubject($subject);
 	}
 
 
@@ -157,7 +136,7 @@ class Provider implements IProvider {
 	 * @param Circle $circle
 	 * @param array $params
 	 *
-	 * @throws InvalidArgumentError
+	 * @throws FakeException
 	 */
 	private function parseAsMember(IEvent &$event, Circle $circle, $params) {
 		if ($event->getType() !== 'circles_as_member') {
@@ -167,8 +146,6 @@ class Provider implements IProvider {
 		$this->parserCircle->parseSubjectCircleCreate($event, $circle);
 		$this->parserCircle->parseSubjectCircleDelete($event, $circle);
 		$this->parseMemberAsMember($event, $circle, $params);
-
-		throw new InvalidArgumentError();
 	}
 
 
@@ -187,8 +164,6 @@ class Provider implements IProvider {
 		$this->parseMemberAsModerator($event, $circle, $params);
 		$this->parseGroupAsModerator($event, $circle, $params);
 		$this->parseLinkAsModerator($event, $circle, $params);
-
-		throw new InvalidArgumentError();
 	}
 
 
@@ -211,8 +186,6 @@ class Provider implements IProvider {
 		$this->parserMember->parseSubjectMemberAdd($event, $circle, $member);
 		$this->parserMember->parseSubjectMemberLeft($event, $circle, $member);
 		$this->parserMember->parseSubjectMemberRemove($event, $circle, $member);
-
-		throw new InvalidArgumentError();
 	}
 
 
@@ -231,8 +204,6 @@ class Provider implements IProvider {
 		$this->parserGroup->parseGroupLink($event, $circle, $group);
 		$this->parserGroup->parseGroupUnlink($event, $circle, $group);
 		$this->parserGroup->parseGroupLevel($event, $circle, $group);
-
-		throw new InvalidArgumentException();
 	}
 
 
@@ -252,8 +223,6 @@ class Provider implements IProvider {
 		$this->parserMember->parseMemberLevel($event, $circle, $member);
 		$this->parserMember->parseMemberRequestInvitation($event, $circle, $member);
 		$this->parserMember->parseMemberOwner($event, $circle, $member);
-
-		throw new InvalidArgumentException();
 	}
 
 
@@ -281,8 +250,6 @@ class Provider implements IProvider {
 		$this->parserLink->parseLinkUp($event, $circle, $remote);
 		$this->parserLink->parseLinkDown($event, $circle, $remote);
 		$this->parserLink->parseLinkRemove($event, $circle, $remote);
-
-		throw new InvalidArgumentException();
 	}
 
 

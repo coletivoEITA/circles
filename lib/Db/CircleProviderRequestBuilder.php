@@ -159,8 +159,6 @@ class CircleProviderRequestBuilder {
 	 *
 	 * @param IQueryBuilder $qb
 	 * @param $files
-	 *
-	 * @internal param $fileId
 	 */
 	protected function limitToFiles(IQueryBuilder &$qb, $files) {
 
@@ -508,6 +506,9 @@ class CircleProviderRequestBuilder {
 	}
 
 
+	/**
+	 * @return IQueryBuilder
+	 */
 	protected function getCompleteSelectSql() {
 		$qb = $this->dbConnection->getQueryBuilder();
 
@@ -541,7 +542,7 @@ class CircleProviderRequestBuilder {
 		$qb->addSelect('s.file_source', 's.file_target');
 		/** @noinspection PhpMethodParametersCountMismatchInspection */
 		$qb->from('share', 's')
-		   ->where($expr->eq('s.share_type', $qb->createNamedParameter(Share::SHARE_TYPE_CIRCLE)))
+		   ->andWhere($expr->eq('s.share_type', $qb->createNamedParameter(Share::SHARE_TYPE_CIRCLE)))
 		   ->andWhere(
 			   $expr->orX(
 				   $expr->eq('s.item_type', $qb->createNamedParameter('file')),

@@ -30,6 +30,7 @@
 namespace OCA\Circles\Service;
 
 
+use Exception;
 use OCA\Circles\AppInfo\Application;
 use OCA\Circles\Db\CirclesRequest;
 use OCA\Circles\Db\FederatedLinksRequest;
@@ -120,7 +121,7 @@ class CirclesService {
 	 * @throws \Exception
 	 */
 	public function createCircle($type, $name) {
-		self::convertTypeStringToBitValue($type);
+		$type = $this->convertTypeStringToBitValue($type);
 		$type = (int)$type;
 
 		if ($type === '') {
@@ -153,15 +154,21 @@ class CirclesService {
 	/**
 	 * list Circles depends on type (or all) and name (parts) and minimum level.
 	 *
+	 * @param string $userId
 	 * @param mixed $type
 	 * @param string $name
 	 * @param int $level
 	 *
 	 * @return Circle[]
 	 * @throws CircleTypeDisabledException
+	 * @throws Exception
 	 */
-	public function listCircles($type, $name = '', $level = 0) {
-		self::convertTypeStringToBitValue($type);
+	public function listCircles($userId, $type, $name = '', $level = 0) {
+		$type = $this->convertTypeStringToBitValue($type);
+
+		if ($userId === '') {
+			throw new Exception('UserID cannot be null');
+		}
 
 		if (!$this->configService->isCircleAllowed((int)$type)) {
 			throw new CircleTypeDisabledException(
@@ -170,7 +177,7 @@ class CirclesService {
 		}
 
 		$data = [];
-		$result = $this->circlesRequest->getCircles($this->userId, $type, $name, $level);
+		$result = $this->circlesRequest->getCircles($userId, $type, $name, $level);
 		foreach ($result as $item) {
 			$data[] = $item;
 		}
@@ -302,7 +309,9 @@ class CirclesService {
 		try {
 			$circle = $this->circlesRequest->getCircle($circleUniqueId, $this->userId);
 
-			$member = $this->membersRequest->getFreshNewMember($circleUniqueId, $this->userId, Member::TYPE_USER);
+			$member = $this->membersRequest->getFreshNewMember(
+				$circleUniqueId, $this->userId, Member::TYPE_USER
+			);
 			$member->hasToBeAbleToJoinTheCircle();
 			$member->joinCircle($circle->getType());
 			$this->membersRequest->updateMember($member);
@@ -380,27 +389,73 @@ class CirclesService {
 		return $this->circlesRequest->forceGetCircleByName($circleName);
 	}
 
+
+	/**
+	 * When a user is removed.
+	 * Before deleting a user from the cloud, we assign a new owner to his Circles.
+	 * Remove the Circle if it has no admin.
+	 *
+	 * @param string $userId
+	 */
+	public function onUserRemoved($userId) {
+		$circles = $this->circlesRequest->getCircles($userId, 0, '', Member::LEVEL_OWNER);
+
+		foreach ($circles as $circle) {
+
+			$members =
+				$this->membersRequest->forceGetMembers($circle->getUniqueId(), Member::LEVEL_ADMIN);
+
+			if (sizeof($members) === 1) {
+				$this->circlesRequest->destroyCircle($circle->getUniqueId());
+				continue;
+			}
+
+			$this->switchOlderAdminToOwner($circle, $members);
+		}
+	}
+
+
+	/**
+	 * switchOlderAdminToOwner();
+	 *
+	 * @param Member[] $members
+	 */
+	private function switchOlderAdminToOwner($circle, $members) {
+
+		foreach ($members as $member) {
+			if ($member->getLevel() === Member::LEVEL_ADMIN) {
+				$member->setLevel(Member::LEVEL_OWNER);
+				$this->membersRequest->updateMember($member);
+				$this->eventsService->onMemberOwner($circle, $member);
+
+				return;
+			}
+		}
+
+	}
+
+
 	/**
 	 * Convert a Type in String to its Bit Value
 	 *
 	 * @param string $type
+	 *
+	 * @return int|mixed
 	 */
-	public static function convertTypeStringToBitValue(&$type) {
-		if (strtolower($type) === 'personal') {
-			$type = Circle::CIRCLES_PERSONAL;
+	public function convertTypeStringToBitValue($type) {
+		$strings = [
+			'personal' => Circle::CIRCLES_PERSONAL,
+			'secret'   => Circle::CIRCLES_SECRET,
+			'closed'   => Circle::CIRCLES_CLOSED,
+			'public'   => Circle::CIRCLES_PUBLIC,
+			'all'      => Circle::CIRCLES_ALL
+		];
+
+		if (!key_exists(strtolower($type), $strings)) {
+			return $type;
 		}
-		if (strtolower($type) === 'secret') {
-			$type = Circle::CIRCLES_SECRET;
-		}
-		if (strtolower($type) === 'closed') {
-			$type = Circle::CIRCLES_CLOSED;
-		}
-		if (strtolower($type) === 'public') {
-			$type = Circle::CIRCLES_PUBLIC;
-		}
-		if (strtolower($type) === 'all') {
-			$type = Circle::CIRCLES_ALL;
-		}
+
+		return $strings[strtolower($type)];
 	}
 
 

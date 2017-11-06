@@ -405,6 +405,7 @@ class ShareByCircleProvider extends CircleProviderRequestBuilder implements ISha
 	 */
 	public function getShareById($shareId, $recipientId = null) {
 		$qb = $this->getBaseSelectSql();
+
 		$this->limitToShare($qb, $shareId);
 
 		$cursor = $qb->execute();
@@ -440,7 +441,7 @@ class ShareByCircleProvider extends CircleProviderRequestBuilder implements ISha
 	 * @param int $limit The max number of entries returned, -1 for all
 	 * @param int $offset
 	 *
-	 * @return array|IShare[]
+	 * @return IShare[]
 	 */
 	public function getSharedWith($userId, $shareType, $node, $limit, $offset) {
 
@@ -450,6 +451,15 @@ class ShareByCircleProvider extends CircleProviderRequestBuilder implements ISha
 	}
 
 
+	/**
+	 * @param $userId
+	 * @param $shareType
+	 * @param $node
+	 * @param $limit
+	 * @param $offset
+	 *
+	 * @return IShare[]
+	 */
 	private function getSharedWithCircleMembers($userId, $shareType, $node, $limit, $offset) {
 
 		$qb = $this->getCompleteSelectSql();
@@ -624,7 +634,7 @@ class ShareByCircleProvider extends CircleProviderRequestBuilder implements ISha
 	 *
 	 * @param array $data
 	 *
-	 * @return Share
+	 * @return IShare
 	 */
 	private function createShareObject($data) {
 
@@ -722,7 +732,7 @@ class ShareByCircleProvider extends CircleProviderRequestBuilder implements ISha
 		$message = 'Sharing %s failed, this item is already shared with this circle';
 		$message_t = $this->l10n->t($message, array($share_src));
 		$this->logger->debug(
-			sprintf($message, $share_src, $share->getSharedWith()), ['app' => Application::APP_NAME]
+			sprintf($message, $share_src, $share->getSharedWith()), ['app' => 'circles']
 		);
 
 		return new \Exception($message_t);
@@ -742,7 +752,6 @@ class ShareByCircleProvider extends CircleProviderRequestBuilder implements ISha
 	 * @since 12
 	 */
 	public function getAccessList($nodes, $currentAccess) {
-
 		$ids = [];
 		foreach ($nodes as $node) {
 			$ids[] = $node->getId();
