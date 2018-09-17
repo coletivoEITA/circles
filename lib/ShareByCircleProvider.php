@@ -463,7 +463,12 @@ class ShareByCircleProvider extends CircleProviderRequest implements IShareProvi
 		$this->limitToPage($qb, $limit, $offset);
 
 		if ($node !== null) {
-			$this->limitToFiles($qb, [$node->getId()]);
+			if (is_array($node)) {
+				$getId = function($value) { return $value->getId(); };
+				$this->limitToFiles($qb, array_map($getId,$node));
+			} else {
+				$this->limitToFiles($qb, [$node->getId()]);
+			}
 		}
 
 		$this->linkToMember($qb, $userId, $this->configService->isLinkedGroupsAllowed());
