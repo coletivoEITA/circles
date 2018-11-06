@@ -44,13 +44,13 @@ style(Application::APP_NAME, 'navigation');
 ?>
 
 
-<div id="app-navigation" class="noborder" style="position: relative">
+<div id="circle-navigation" class="noborder" style="position: relative">
 	<div class="navigation-element" style="height: 100%; padding-top: 15px">
 		<input id="circles_new_name" type="text"
 			   placeholder="<?php p($l->t('Create a new circle')); ?>"/>
 		<select id="circles_new_type" style="display: none;" class="select_none">
 			<option value="" style="font-style: italic">&nbsp;&nbsp;&nbsp;&nbsp;<?php p(
-					$l->t("Select a type of circle")
+					$l->t("Select a circle type")
 				); ?></option>
 			<?php
 
@@ -101,7 +101,7 @@ style(Application::APP_NAME, 'navigation');
 			?>
 
 		</select>
-		<input id="circles_new_submit" type="submit" value="Creation" style="display: none;"/>
+		<input id="circles_new_submit" type="submit" value="<?php p($l->t('Creation')); ?>" style="display: none;"/>
 
 		<div id="circles_new_type_definition" style="display: none;">
 			<div id="circles_new_type_1"><b>
@@ -130,12 +130,12 @@ style(Application::APP_NAME, 'navigation');
 			</div>
 			<div id="circles_new_type_4"><b><?php p(
 						$l->t(
-							"Joining a closed circle requires an invitation or a confirmation by a moderator."
+							"Joining a closed circle requires an invitation or confirmation by a moderator."
 						)
 					); ?>
 				</b><br/><?php p(
 					$l->t(
-						"Anyone can find the circle and request an invitation; but only members will see who's in it and get access to shared items."
+						"Anyone can find and request an invitation to the circle; but only members will see who\'s in it and get access to it\'s shared items."
 					)
 				); ?>
 			</div>
@@ -145,7 +145,7 @@ style(Application::APP_NAME, 'navigation');
 						)
 					); ?></b><br/><?php p(
 					$l->t(
-						"Anyone can see the circle, can join the circle and access the items shared to the circle."
+						"Anyone can see, join, and access the items shared within the circle."
 					)
 				); ?>
 			</div>
@@ -193,7 +193,7 @@ style(Application::APP_NAME, 'navigation');
 
 </div>
 
-<div id="app-navigation" class="circles" style="display: none;">
+<div id="circle-navigation" class="circles" style="display: none;">
 	<input id="circles_search" type="text"
 		   placeholder="<?php p($l->t('Search circles')); ?>"/>
 	<select id="circles_filters">
@@ -220,7 +220,10 @@ style(Application::APP_NAME, 'navigation');
 	<div id="mainui">
 
 		<div id="circle_details">
-			<div class="lightenbg"></div>
+			<div class="lightenbg">
+				<input id="adminsettingscircle" type="submit"
+					   value="<?php p($l->t('Settings')); ?>"/>
+			</div>
 			<div id="name"></div>
 			<div id="type"></div>
 
@@ -365,11 +368,23 @@ style(Application::APP_NAME, 'navigation');
 						<td><textarea type="text" id="settings-desc"></textarea></td>
 					</tr>
 
+
+					<tr id="settings-entry-limit">
+						<td class="left"><?php p($l->t('Members limit')); ?><br/>
+							<span class="hint"><?php p(
+									$l->t(
+										'Change the limit to the number of members. (0: default, -1: unlimited)'
+									)
+								); ?></span>
+						</td>
+						<td><input type="text" value="" id="settings-limit"></td>
+					</tr>
+
 					<tr id="settings-entry-link">
 						<td class="left"><?php p($l->t('Allow Federated Links')); ?><br/>
 							<span class="hint"><?php p(
 									$l->t(
-										'Turns the circle as Federated and enable sharing between Federated Circles'
+										'Makes the circle federated, and enables sharing between federated circles'
 									)
 								); ?></span>
 						</td>
@@ -382,11 +397,11 @@ style(Application::APP_NAME, 'navigation');
 						<td><input type="checkbox" value="1" id="settings-link-files"></td>
 					</tr>-->
 					<tr id="settings-entry-link-auto">
-						<td class="left"><?php p($l->t('Automatically Accept Link Request')); ?>
+						<td class="left"><?php p($l->t('Accept Link Request Automatically')); ?>
 							<br/>
 							<span class="hint"><?php p(
 									$l->t(
-										'Warning: enabling this will automatically accept new link requests from other circle.'
+										'Warning: Enabling this will automatically accept new link requests from other circles.'
 									)
 								); ?></span>
 						</td>

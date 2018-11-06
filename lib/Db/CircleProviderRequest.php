@@ -28,8 +28,6 @@
 namespace OCA\Circles\Db;
 
 
-use OCA\Circles\Model\Member;
-
 class CircleProviderRequest extends CircleProviderRequestBuilder {
 
 
@@ -51,18 +49,11 @@ class CircleProviderRequest extends CircleProviderRequestBuilder {
 		$this->linkToMember($qb, $userId, $this->configService->isLinkedGroupsAllowed());
 
 		$this->leftJoinShareInitiator($qb);
+		
 		$cursor = $qb->execute();
 
 		$object_ids = [];
 		while ($data = $cursor->fetch()) {
-
-			if ($data['initiator_circle_level'] < Member::LEVEL_MEMBER
-				&& ($data['initiator_group_level'] < Member::LEVEL_MEMBER
-					|| !$this->configService->isLinkedGroupsAllowed())
-			) {
-				continue;
-			}
-
 			self::editShareFromParentEntry($data);
 			if (self::isAccessibleResult($data)) {
 				$object_ids[] = $data['file_source'];

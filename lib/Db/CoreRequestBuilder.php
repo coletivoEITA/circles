@@ -12,6 +12,7 @@ namespace OCA\Circles\Db;
 use OCA\Circles\Model\Circle;
 use OCA\Circles\Model\Member;
 use OCA\Circles\Service\ConfigService;
+use OCA\Circles\Service\TimezoneService;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use Doctrine\DBAL\Query\QueryBuilder;
 use OCA\Circles\Service\MiscService;
@@ -19,6 +20,9 @@ use OCP\IDBConnection;
 use OCP\IL10N;
 
 class CoreRequestBuilder {
+
+	const TABLE_FILE_SHARES = 'share';
+	const SHARE_TYPE = 7;
 
 	const TABLE_CIRCLES = 'circles_circles';
 	const TABLE_MEMBERS = 'circles_members';
@@ -37,6 +41,9 @@ class CoreRequestBuilder {
 	/** @var ConfigService */
 	protected $configService;
 
+	/** @var TimezoneService */
+	protected $timezoneService;
+
 	/** @var MiscService */
 	protected $miscService;
 
@@ -52,15 +59,17 @@ class CoreRequestBuilder {
 	 * @param IL10N $l10n
 	 * @param IDBConnection $connection
 	 * @param ConfigService $configService
+	 * @param TimezoneService $timezoneService
 	 * @param MiscService $miscService
 	 */
 	public function __construct(
 		IL10N $l10n, IDBConnection $connection, ConfigService $configService,
-		MiscService $miscService
+			 TimezoneService $timezoneService, MiscService $miscService
 	) {
 		$this->l10n = $l10n;
 		$this->dbConnection = $connection;
 		$this->configService = $configService;
+		$this->timezoneService = $timezoneService;
 		$this->miscService = $miscService;
 	}
 

@@ -114,8 +114,8 @@ var actions = {
 	unselectCircle: function (circle_id) {
 		elements.mainUIMembersTable.emptyTable();
 		elements.navigation.children(".circle[circle-id='" + circle_id + "']").remove();
-		elements.emptyContent.show(800);
-		elements.mainUI.fadeOut(800);
+		elements.emptyContent.show(400);
+		elements.mainUI.fadeOut(400);
 
 		curr.circle = 0;
 		curr.circleLevel = 0;
@@ -127,6 +127,7 @@ var actions = {
 			circle_name: elements.settingsName.val(),
 			circle_desc: elements.settingsDesc.val(),
 			allow_links: (elements.settingsLink.is(":checked")),
+			members_limit: (elements.settingsLimit.val()),
 			allow_links_auto: (elements.settingsLinkAuto.is(":checked")),
 			allow_links_files: (elements.settingsLinkFiles.is(":checked"))
 		};
@@ -196,8 +197,8 @@ var actions = {
 		curr.circleLevel = 0;
 
 		elements.circlesList.children('div').removeClass('selected');
-		elements.emptyContent.show(800);
-		elements.mainUI.fadeOut(800);
+		elements.emptyContent.show(400);
+		elements.mainUI.fadeOut(400);
 	},
 
 

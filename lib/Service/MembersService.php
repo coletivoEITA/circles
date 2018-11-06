@@ -31,10 +31,12 @@ use Exception;
 use OC\User\NoUserException;
 use OCA\Circles\Db\CirclesRequest;
 use OCA\Circles\Db\MembersRequest;
+use OCA\Circles\Db\SharesRequest;
 use OCA\Circles\Exceptions\CircleTypeNotValidException;
 use OCA\Circles\Exceptions\EmailAccountInvalidFormatException;
 use OCA\Circles\Exceptions\GroupDoesNotExistException;
 use OCA\Circles\Exceptions\MemberAlreadyExistsException;
+use OCA\Circles\Exceptions\MembersLimitException;
 use OCA\Circles\Model\Circle;
 use OCA\Circles\Model\Member;
 use OCP\IL10N;
@@ -60,6 +62,12 @@ class MembersService {
 	/** @var MembersRequest */
 	private $membersRequest;
 
+	/** @var SharesRequest */
+	private $sharesRequest;
+
+	/** @var CirclesService */
+	private $circlesService;
+
 	/** @var EventsService */
 	private $eventsService;
 
@@ -75,12 +83,15 @@ class MembersService {
 	 * @param ConfigService $configService
 	 * @param CirclesRequest $circlesRequest
 	 * @param MembersRequest $membersRequest
+	 * @param SharesRequest $sharesRequest
+	 * @param CirclesService $circlesService
 	 * @param EventsService $eventsService
 	 * @param MiscService $miscService
 	 */
 	public function __construct(
 		$userId, IL10N $l10n, IUserManager $userManager, ConfigService $configService,
-		CirclesRequest $circlesRequest, MembersRequest $membersRequest, EventsService $eventsService,
+		CirclesRequest $circlesRequest, MembersRequest $membersRequest,
+		SharesRequest $sharesRequest, CirclesService $circlesService, EventsService $eventsService,
 		MiscService $miscService
 	) {
 		$this->userId = $userId;
@@ -89,6 +100,8 @@ class MembersService {
 		$this->configService = $configService;
 		$this->circlesRequest = $circlesRequest;
 		$this->membersRequest = $membersRequest;
+		$this->sharesRequest = $sharesRequest;
+		$this->circlesService = $circlesService;
 		$this->eventsService = $eventsService;
 		$this->miscService = $miscService;
 	}
@@ -101,7 +114,7 @@ class MembersService {
 	 *
 	 * @param string $circleUniqueId
 	 * @param $ident
-	 * @param $type
+	 * @param int $type
 	 *
 	 * @return array
 	 * @throws \Exception
@@ -120,7 +133,9 @@ class MembersService {
 			throw $e;
 		}
 
-		return $this->membersRequest->getMembers($circle->getUniqueId(), $circle->getHigherViewer());
+		return $this->membersRequest->getMembers(
+			$circle->getUniqueId(), $circle->getHigherViewer()
+		);
 	}
 
 
@@ -130,12 +145,17 @@ class MembersService {
 	 * @param Circle $circle
 	 * @param string $ident
 	 * @param int $type
+	 *
+	 * @throws MemberAlreadyExistsException
+	 * @throws Exception
 	 */
 	private function addSingleMember(Circle $circle, $ident, $type) {
 		$this->verifyIdentBasedOnItsType($ident, $type);
 
 		$member = $this->membersRequest->getFreshNewMember($circle->getUniqueId(), $ident, $type);
 		$member->hasToBeInviteAble();
+
+		$this->circlesService->checkThatCircleIsNotFull($circle);
 
 		$this->addMemberBasedOnItsType($circle, $member);
 
@@ -152,6 +172,7 @@ class MembersService {
 	 * @param int $type
 	 *
 	 * @return bool
+	 * @throws Exception
 	 */
 	private function addMassiveMembers(Circle $circle, $ident, $type) {
 
@@ -168,6 +189,8 @@ class MembersService {
 	 *
 	 * @param Circle $circle
 	 * @param Member $member
+	 *
+	 * @throws Exception
 	 */
 	private function addMemberBasedOnItsType(Circle $circle, Member &$member) {
 		$this->addLocalMember($circle, $member);
@@ -389,7 +412,9 @@ class MembersService {
 			$member->levelHasToBeEditable();
 			$this->updateMemberLevel($circle, $member, $level);
 
-			return $this->membersRequest->getMembers($circle->getUniqueId(), $circle->getHigherViewer());
+			return $this->membersRequest->getMembers(
+				$circle->getUniqueId(), $circle->getHigherViewer()
+			);
 		} catch (\Exception $e) {
 			throw $e;
 		}
@@ -397,6 +422,13 @@ class MembersService {
 	}
 
 
+	/**
+	 * @param Circle $circle
+	 * @param Member $member
+	 * @param $level
+	 *
+	 * @throws Exception
+	 */
 	private function updateMemberLevel(Circle $circle, Member $member, $level) {
 		if ($member->getLevel() === $level) {
 			return;
@@ -446,7 +478,9 @@ class MembersService {
 	private function switchOwner(Circle $circle, Member &$member) {
 		try {
 			$isMod = $circle->getHigherViewer();
-			$isMod->hasToBeOwner();
+
+			// should already be possible from an NCAdmin, but not enabled in the frontend.
+			$this->circlesService->hasToBeOwner($isMod);
 
 			$member->hasToBeMember();
 			$member->cantBeOwner();
@@ -490,9 +524,8 @@ class MembersService {
 
 		$this->eventsService->onMemberLeaving($circle, $member);
 
-		$member->setStatus(Member::STATUS_NONMEMBER);
-		$member->setLevel(Member::LEVEL_NONE);
-		$this->membersRequest->updateMember($member);
+		$this->membersRequest->removeMember($member);
+		$this->sharesRequest->removeSharesFromMember($member);
 
 		return $this->membersRequest->getMembers(
 			$circle->getUniqueId(), $circle->getHigherViewer()

@@ -161,7 +161,7 @@ class CirclesTest extends \PHPUnit_Framework_TestCase {
 
 		try {
 			foreach ($circles AS $circle) {
-				Circles::addLocalMember($circle->getId(), Env::ENV_TEST_ADMIN2);
+				Circles::addMember($circle->getId(), Env::ENV_TEST_ADMIN2, Member::TYPE_USER);
 
 				if ($circle->getType() === Circle::CIRCLES_CLOSED) {
 					// In closed circle, we need to confirm the invitation
@@ -232,7 +232,7 @@ class CirclesTest extends \PHPUnit_Framework_TestCase {
 
 		try {
 			foreach ($circles AS $circle) {
-				Circles::addLocalMember($circle->getId(), Env::ENV_TEST_MODERATOR2);
+				Circles::addMember($circle->getId(), Env::ENV_TEST_MODERATOR2, Member::TYPE_USER);
 				if ($circle->getType() === Circle::CIRCLES_CLOSED) {
 					// In closed circle, we need to confirm the invitation
 					Env::setUser(Env::ENV_TEST_MODERATOR2);
@@ -297,8 +297,8 @@ class CirclesTest extends \PHPUnit_Framework_TestCase {
 
 		foreach ($circles AS $circle) {
 			try {
-				Circles::addLocalMember(
-					$circle->getId(), Env::ENV_TEST_MEMBER2
+				Circles::addMember(
+					$circle->getId(), Env::ENV_TEST_MEMBER2, Member::TYPE_USER
 				);
 				$this->assertSame(true, false, 'should return an exception');
 			} catch (MemberIsNotModeratorException $e) {
@@ -502,7 +502,7 @@ class CirclesTest extends \PHPUnit_Framework_TestCase {
 
 
 				try {
-					Circles::addLocalMember($circle->getId(), Env::ENV_TEST_MEMBER2);
+					Circles::addMember($circle->getId(), Env::ENV_TEST_MEMBER2, Member::TYPE_USER);
 
 					// If Closed, we check that the user is not a member before confirming
 					// the invitation using member account
@@ -541,9 +541,11 @@ class CirclesTest extends \PHPUnit_Framework_TestCase {
 					);
 
 
-					Circles::removeMember(
-						$circle->getId(), Env::ENV_TEST_MEMBER2, Member::TYPE_USER
-					);
+						Circles::removeMember(
+							$circle->getId(), Env::ENV_TEST_MEMBER2, Member::TYPE_USER
+						);
+
+				try {
 					$member = Circles::getMember(
 						$circle->getId(), Env::ENV_TEST_MEMBER2, Member::TYPE_USER
 					);
@@ -557,6 +559,7 @@ class CirclesTest extends \PHPUnit_Framework_TestCase {
 							$member->getCircleId()
 						]
 					);
+				} catch (MemberDoesNotExistException $e) {}
 
 				} catch (Exception $e) {
 					throw $e;
@@ -644,7 +647,7 @@ class CirclesTest extends \PHPUnit_Framework_TestCase {
 								]
 							);
 
-							Circles::addLocalMember($circle->getId(), Env::ENV_TEST_MEMBER3);
+							Circles::addMember($circle->getId(), Env::ENV_TEST_MEMBER3, Member::TYPE_USER);
 							Env::setUser(Env::ENV_TEST_MEMBER3);
 						}
 
@@ -699,6 +702,7 @@ class CirclesTest extends \PHPUnit_Framework_TestCase {
 								$member->getCircleId()
 							]
 						);
+					} catch (MemberDoesNotExistException $e) {
 					} catch (Exception $e) {
 						throw $e;
 					}
@@ -862,7 +866,7 @@ class CirclesTest extends \PHPUnit_Framework_TestCase {
 
 		$curr = Env::currentUser();
 
-		Circles::addLocalMember($circleId, Env::ENV_TEST_ADMIN1);
+		Circles::addMember($circleId, Env::ENV_TEST_ADMIN1, Member::TYPE_USER);
 		if ($isClosed) {
 			Env::setUser(Env::ENV_TEST_ADMIN1);
 			Circles::joinCircle($circleId);
@@ -873,7 +877,7 @@ class CirclesTest extends \PHPUnit_Framework_TestCase {
 		);
 
 
-		Circles::addLocalMember($circleId, Env::ENV_TEST_MODERATOR1);
+		Circles::addMember($circleId, Env::ENV_TEST_MODERATOR1, Member::TYPE_USER);
 		if ($isClosed) {
 			Env::setUser(Env::ENV_TEST_MODERATOR1);
 			Circles::joinCircle($circleId);
@@ -883,7 +887,7 @@ class CirclesTest extends \PHPUnit_Framework_TestCase {
 			$circleId, Env::ENV_TEST_MODERATOR1, Member::TYPE_USER, Member::LEVEL_MODERATOR
 		);
 
-		Circles::addLocalMember($circleId, Env::ENV_TEST_MEMBER1);
+		Circles::addMember($circleId, Env::ENV_TEST_MEMBER1, Member::TYPE_USER);
 		if ($isClosed) {
 			Env::setUser(Env::ENV_TEST_MEMBER1);
 			Circles::joinCircle($circleId);

@@ -23,12 +23,14 @@ Users won't be able to find this Circle using Nextcloud search engine.
 
 		]]>
 	</description>
-	<version>0.13.6</version>
+	<version>0.15.2</version>
 	<licence>agpl</licence>
 	<author>Maxence Lange</author>
 	<documentation>
 		<admin>https://github.com/nextcloud/circles/wiki</admin>
 	</documentation>
+	<category>integration</category>
+	<category>organization</category>
 	<category>tools</category>
 	<category>social</category>
 	<website>https://github.com/nextcloud/circles</website>
@@ -36,7 +38,7 @@ Users won't be able to find this Circle using Nextcloud search engine.
 	<repository>https://github.com/nextcloud/circles.git</repository>
 	<screenshot>https://raw.githubusercontent.com/nextcloud/circles/master/screenshots/0.12.0.png</screenshot>
 	<dependencies>
-		<nextcloud min-version="12" max-version="13"/>
+		<nextcloud min-version="14" max-version="14"/>
 	</dependencies>
 
 	<repair-steps>
@@ -45,6 +47,7 @@ Users won't be able to find this Circle using Nextcloud search engine.
 			<step>OCA\Circles\Migration\ImportOwncloudCustomGroups</step>
 			<step>OCA\Circles\Migration\GenerateUniqueIdOnCreatedCircle</step>
 			<step>OCA\Circles\Migration\UsingShortenUniqueIdInsteadOfCircleId</step>
+			<step>OCA\Circles\Migration\RemoveDeadShares</step>
 		</post-migration>
 	</repair-steps>
 
@@ -53,6 +56,10 @@ Users won't be able to find this Circle using Nextcloud search engine.
 		<!--<command>OCA\Circles\Command\Groups</command>-->
 		<command>OCA\Circles\Command\FixUniqueId</command>
 	</commands>
+
+	<settings>
+		<admin>OCA\Circles\Settings\CirclesSettings</admin>
+	</settings>
 
 	<activity>
 		<settings>
@@ -72,4 +79,5 @@ Users won't be able to find this Circle using Nextcloud search engine.
 			<plugin type="collaborator-search" share-type="SHARE_TYPE_CIRCLE">OCA\Circles\Collaboration\v1\CollaboratorSearchPlugin</plugin>
 		</plugins>
 	</collaboration>
+
 </info>

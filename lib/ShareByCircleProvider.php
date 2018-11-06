@@ -34,16 +34,18 @@ namespace OCA\Circles;
 use OC\Files\Cache\Cache;
 use OC\Share20\Exception\InvalidShare;
 use OC\Share20\Share;
+use OC\User\NoUserException;
 use OCA\Circles\Api\v1\Circles;
 use OCA\Circles\AppInfo\Application;
 use OCA\Circles\Db\CircleProviderRequest;
 use OCA\Circles\Db\CirclesRequest;
 use OCA\Circles\Db\MembersRequest;
 use OCA\Circles\Model\Circle;
-use OCA\Circles\Model\Member;
 use OCA\Circles\Service\CirclesService;
 use OCA\Circles\Service\ConfigService;
 use OCA\Circles\Service\MiscService;
+use OCA\Circles\Service\TimezoneService;
+use OCP\AppFramework\QueryException;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -93,6 +95,8 @@ class ShareByCircleProvider extends CircleProviderRequest implements IShareProvi
 	 * @param IL10N $l10n
 	 * @param ILogger $logger
 	 * @param IURLGenerator $urlGenerator
+	 *
+	 * @throws QueryException
 	 */
 	public function __construct(
 		IDBConnection $connection, ISecureRandom $secureRandom, IUserManager $userManager,
@@ -102,8 +106,9 @@ class ShareByCircleProvider extends CircleProviderRequest implements IShareProvi
 		$container = $app->getContainer();
 		$configService = $container->query(ConfigService::class);
 		$miscService = $container->query(MiscService::class);
+		$timezoneService = $container->query(TimezoneService::class);
 
-		parent::__construct($l10n, $connection, $configService, $miscService);
+		parent::__construct($l10n, $connection, $configService, $timezoneService, $miscService);
 
 		$this->secureRandom = $secureRandom;
 		$this->userManager = $userManager;
@@ -368,13 +373,16 @@ class ShareByCircleProvider extends CircleProviderRequest implements IShareProvi
 	 * @param $data
 	 *
 	 * @return array<string,string>
+	 * @throws NoUserException
 	 */
 	private function editShareEntry($data) {
 		$data['share_with'] =
 			sprintf(
-				'%s (%s, %s)', $data['circle_name'], Circle::TypeLongString($data['circle_type']),
-				$this->miscService->getDisplayName($data['circle_owner'])
+				'%s (%s, %s) [%s]', $data['circle_name'],
+				Circle::TypeLongString($data['circle_type']),
+				$this->miscService->getDisplayName($data['circle_owner']), $data['share_with']
 			);
+
 
 		return $data;
 	}
@@ -473,19 +481,10 @@ class ShareByCircleProvider extends CircleProviderRequest implements IShareProvi
 
 		$this->linkToMember($qb, $userId, $this->configService->isLinkedGroupsAllowed());
 
-		$this->leftJoinShareInitiator($qb);
 		$cursor = $qb->execute();
 
 		$shares = [];
 		while ($data = $cursor->fetch()) {
-
-			if ($data['initiator_circle_level'] < Member::LEVEL_MEMBER
-				&& ($data['initiator_group_level'] < Member::LEVEL_MEMBER
-					|| !$this->configService->isLinkedGroupsAllowed())
-			) {
-				continue;
-			}
-
 			self::editShareFromParentEntry($data);
 			if (self::isAccessibleResult($data)) {
 				$shares[] = $this->createShareObject($data);
@@ -708,6 +707,21 @@ class ShareByCircleProvider extends CircleProviderRequest implements IShareProvi
 		}
 
 		return ['users' => $users];
+	}
+
+
+	/**
+	 * Restore a share for a given recipient. The implementation could be provider independant.
+	 *
+	 * @param IShare $share
+	 * @param string $recipient
+	 *
+	 * @return IShare The restored share object
+	 *
+	 * @since 14.0.0
+	 */
+	public function restore(IShare $share, string $recipient): IShare {
+		return $share;
 	}
 
 

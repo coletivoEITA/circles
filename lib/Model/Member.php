@@ -44,7 +44,7 @@ class Member extends BaseMember {
 	public function inviteToCircle($circleType) {
 
 		if ($circleType === 0) {
-			throw new CircleTypeNotValidException('Circle Type is not valid');
+			throw new CircleTypeNotValidException('Invalid circle type');
 		}
 
 		if ($circleType === Circle::CIRCLES_CLOSED) {
@@ -142,34 +142,11 @@ class Member extends BaseMember {
 
 		if ($this->getLevel() <= $level) {
 			throw new ModeratorIsNotHighEnoughException(
-				$this->l10n->t('Not enough privileges')
+				$this->l10n->t('Insufficient privileges')
 			);
 		}
 	}
 
-
-	/**
-	 * @throws MemberIsNotModeratorException
-	 */
-	public function hasToBeOwner() {
-		if ($this->getLevel() < self::LEVEL_OWNER) {
-			throw new MemberIsNotOwnerException(
-				$this->l10n->t('This member is not the owner of the circle')
-			);
-		}
-	}
-
-
-	/**
-	 * @throws MemberIsNotModeratorException
-	 */
-	public function hasToBeAdmin() {
-		if ($this->getLevel() < self::LEVEL_ADMIN) {
-			throw new MemberIsNotAdminException(
-				$this->l10n->t('This member is not admin of the circle')
-			);
-		}
-	}
 
 	/**
 	 * @throws MemberDoesNotExistException
@@ -242,7 +219,7 @@ class Member extends BaseMember {
 	public function levelHasToBeEditable() {
 		if ($this->getType() !== self::TYPE_USER) {
 			throw new MemberTypeCantEditLevelException(
-				$this->l10n->t('Level cannot be changed for that type of member')
+				$this->l10n->t('Level cannot be changed for this type of member')
 			);
 		}
 	}
@@ -275,13 +252,13 @@ class Member extends BaseMember {
 
 		if ($this->getLevel() > 0) {
 			throw new MemberAlreadyExistsException(
-				$this->l10n->t("User is already a member of this circle")
+				$this->l10n->t("The user is already a member of this circle")
 			);
 		}
 
 		if ($this->getStatus() === Member::STATUS_INVITED) {
 			throw new MemberAlreadyExistsException(
-				$this->l10n->t("User is already invited into this circle")
+				$this->l10n->t("The user has already been invited into this circle")
 			);
 		}
 	}

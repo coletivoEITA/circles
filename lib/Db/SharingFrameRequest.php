@@ -28,13 +28,7 @@
 namespace OCA\Circles\Db;
 
 
-use OCA\Circles\Exceptions\CircleAlreadyExistsException;
-use OCA\Circles\Exceptions\CircleDoesNotExistException;
-use OCA\Circles\Exceptions\FederatedLinkDoesNotExistException;
 use OCA\Circles\Exceptions\SharingFrameDoesNotExistException;
-use OCA\Circles\Model\Circle;
-use OCA\Circles\Model\FederatedLink;
-use OCA\Circles\Model\Member;
 use OCA\Circles\Model\SharingFrame;
 
 class SharingFrameRequest extends SharingFrameRequestBuilder {
